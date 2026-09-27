@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f6ef">
+  <title>MetroKinetic | Energy operations</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="/js/app.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Main navigation">
+      <a class="brand" href="/" aria-label="MetroKinetic home">
+        <span class="brand-mark" aria-hidden="true">MK</span>
+        <span class="brand-copy"><strong>MetroKinetic</strong><small>ENERGY NETWORK</small></span>
+      </a>
+      <div class="station-picker">
+        <span class="eyebrow">OPERATIONS AREA</span>
+        <strong>Central Station</strong>
+        <span class="station-live"><span></span> Local network</span>
+      </div>
+      <nav class="nav-list" aria-label="Workspace">
+        <button class="nav-item is-active" type="button" data-view="overview"><span class="nav-index">01</span>Overview</button>
+        <button class="nav-item" type="button" data-view="sectors"><span class="nav-index">02</span>Floor sectors</button>
+        <button class="nav-item" type="button" data-view="telemetry"><span class="nav-index">03</span>Telemetry</button>
+        <button class="nav-item" type="button" data-view="history"><span class="nav-index">04</span>History</button>
+        <button class="nav-item" type="button" data-view="reports"><span class="nav-index">05</span>Reports</button>
+      </nav>
+      <div class="sidebar-foot">
+        <span class="eyebrow">SYSTEM STATUS</span>
+        <div class="connection"><span class="status-dot" id="connection-dot"></span><span id="connection-label">Connecting to API</span></div>
+        <small>Persistent local storage</small>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">TRANSIT ENERGY DIRECTORATE <span class="slash">/</span> CENTRAL</p>
+          <h1 id="page-title">Network overview</h1>
+        </div>
+        <div class="topbar-meta"><span class="date-chip" id="today-label"></span><span class="live-chip"><span></span> LIVE OPERATIONS</span></div>
+      </header>
+
+      <section class="view is-visible" id="view-overview" aria-labelledby="overview-heading">
+        <div class="section-heading">
+          <div><span class="eyebrow">ENERGY SNAPSHOT</span><h2 id="overview-heading">Footfall into stored power.</h2></div>
+          <button class="button button-quiet" id="refresh-overview" type="button">Refresh data <span aria-hidden="true">↻</span></button>
+        </div>
+        <div class="metric-strip" aria-live="polite">
+          <article class="metric metric-primary"><span>Total generated</span><strong id="metric-kwh">0.000000 <small>kWh</small></strong><small class="metric-note">Across registered sectors</small></article>
+          <article class="metric"><span>Recorded steps</span><strong id="metric-steps">0</strong><small class="metric-note">Cumulative footfall pulses</small></article>
+          <article class="metric"><span>Floor sectors</span><strong id="metric-sectors">0</strong><small class="metric-note">Configured in this network</small></article>
+          <article class="metric metric-accent"><span>Today’s average power</span><strong id="metric-today">0.000 <small>W</small></strong><small class="metric-note" id="today-sector-count">No active sectors today</small></article>
+        </div>
+
+        <div class="content-grid overview-grid">
+          <section class="data-section">
+            <div class="section-title-row"><div><span class="eyebrow">DAILY YIELD</span><h3>Sector output</h3></div><label class="date-control">Report date<input id="overview-date" type="date"></label></div>
+            <div class="table-wrap">
+              <table><thead><tr><th>Sector</th><th>Station zone</th><th class="numeric">Steps</th><th class="numeric">Average power</th></tr></thead><tbody id="daily-table-body"><tr><td colspan="4" class="empty-cell">Loading generation data…</td></tr></tbody></table>
+            </div>
+            <p class="table-footnote">Average power uses the selected UTC day: daily energy in kWh × 1,000 ÷ 24 hours.</p>
+          </section>
+
+          <section class="data-section quick-capture">
+            <div class="section-title-row"><div><span class="eyebrow">FIELD INPUT</span><h3>Log floor activity</h3></div><span class="section-marker">01 / 02</span></div>
+            <form id="telemetry-form" class="form-stack">
+              <label>Floor sector<select id="telemetry-sector" required><option value="">Select a sector</option></select></label>
+              <div class="sector-empty-help" id="telemetry-sector-help" hidden>
+                <span>No floor sectors are registered yet, so there are no options to select.</span>
+                <button class="text-button" type="button" data-open-view="sectors">Create a floor sector <span aria-hidden="true">→</span></button>
+              </div>
+              <label>Step count<input id="telemetry-steps" type="number" min="1" step="1" placeholder="e.g. 1840" required></label>
+              <button class="button button-dark" type="submit">Record telemetry <span aria-hidden="true">→</span></button>
+            </form>
+            <p class="form-hint">Captured at the current time and converted using the sector’s configured rate.</p>
+          </section>
+        </div>
+
+        <section class="data-section sector-summary">
+          <div class="section-title-row"><div><span class="eyebrow">NETWORK MAP</span><h3>Registered floor sectors</h3></div><button class="text-button" type="button" data-open-view="sectors">Manage sectors <span aria-hidden="true">→</span></button></div>
+          <div class="sector-list" id="sector-summary"><p class="empty-message">No sectors registered yet. Add the first floor area to begin tracking.</p></div>
+        </section>
+      </section>
+
+      <section class="view" id="view-sectors" aria-labelledby="sectors-heading" hidden>
+        <div class="section-heading"><div><span class="eyebrow">NETWORK CONFIGURATION</span><h2 id="sectors-heading">Floor sectors</h2></div><span class="section-marker">MASTER DATA / 01</span></div>
+        <div class="content-grid sector-grid">
+          <section class="data-section">
+            <div class="section-title-row"><div><span class="eyebrow">REGISTERED AREAS</span><h3>Sector directory</h3></div><span class="count-label" id="sector-count-label">0 sectors</span></div>
+            <div class="table-wrap"><table><thead><tr><th>Sector</th><th>Station zone</th><th class="numeric">kWh / step</th><th class="numeric">Lifetime yield</th></tr></thead><tbody id="sectors-table-body"><tr><td colspan="4" class="empty-cell">Loading sectors…</td></tr></tbody></table></div>
+          </section>
+          <section class="data-section create-sector-section">
+            <div class="section-title-row"><div><span class="eyebrow">NEW INSTALLATION</span><h3>Configure a sector</h3></div><span class="section-marker">01</span></div>
+            <form id="sector-form" class="form-stack">
+              <label>Sector name<input id="sector-name" type="text" maxlength="100" placeholder="Concourse west tiles" required></label>
+              <label>Station zone<input id="sector-zone" type="text" maxlength="100" placeholder="Central Station Concourse" required></label>
+              <label>Conversion rate <span class="label-unit">kWh per step</span><input id="sector-rate" type="number" min="0.0000001" step="any" placeholder="0.000125" required></label>
+              <button class="button button-dark" type="submit">Add floor sector <span aria-hidden="true">→</span></button>
+            </form>
+            <p class="form-hint">Use the calibrated conversion rate supplied for the installed tile transducers.</p>
+          </section>
+        </div>
+      </section>
+
+      <section class="view" id="view-telemetry" aria-labelledby="telemetry-heading" hidden>
+        <div class="section-heading"><div><span class="eyebrow">FIELD DATA INTAKE</span><h2 id="telemetry-heading">Telemetry</h2></div><span class="section-marker">INGEST / 02</span></div>
+        <div class="content-grid telemetry-grid">
+          <section class="data-section telemetry-form-section">
+            <div class="section-title-row"><div><span class="eyebrow">NEW READING</span><h3>Record step count</h3></div><span class="section-marker">UTC TIMESTAMP</span></div>
+            <form id="telemetry-form-full" class="form-stack form-inline-limit">
+              <label>Floor sector<select id="telemetry-sector-full" required><option value="">Select a sector</option></select></label>
+              <div class="sector-empty-help" id="telemetry-sector-full-help" hidden>
+                <span>No floor sectors are registered yet, so there are no options to select.</span>
+                <button class="text-button" type="button" data-open-view="sectors">Create a floor sector <span aria-hidden="true">→</span></button>
+              </div>
+              <label>Steps recorded<input id="telemetry-steps-full" type="number" min="1" step="1" placeholder="e.g. 1840" required></label>
+              <button class="button button-dark" type="submit">Submit reading <span aria-hidden="true">→</span></button>
+            </form>
+          </section>
+          <section class="telemetry-note">
+            <span class="eyebrow">CONVERSION PIPELINE</span>
+            <div class="pipeline"><span>Steps</span><b>×</b><span>Tile rate</span><b>→</b><strong>kWh</strong></div>
+            <p>Each reading updates sector lifetime totals and is saved locally. Use History to review past readings, including data from earlier days.</p>
+          </section>
+        </div>
+        <section class="data-section telemetry-sectors">
+          <div class="section-title-row"><div><span class="eyebrow">LIVE NETWORK</span><h3>Sector telemetry totals</h3></div><span class="count-label" id="telemetry-sector-count">0 sectors</span></div>
+          <div class="table-wrap"><table><thead><tr><th>Sector</th><th>Station zone</th><th class="numeric">Total steps</th><th class="numeric">Lifetime kWh</th><th>Last reading</th></tr></thead><tbody id="telemetry-table-body"><tr><td colspan="5" class="empty-cell">Loading sector totals…</td></tr></tbody></table></div>
+        </section>
+      </section>
+
+      <section class="view" id="view-reports" aria-labelledby="reports-heading" hidden>
+              <section class="view" id="view-history" aria-labelledby="history-heading" hidden>
+                <div class="section-heading">
+                  <div><span class="eyebrow">SAVED FIELD DATA</span><h2 id="history-heading">Telemetry history</h2></div>
+                  <span class="section-marker">UTC RECORDS / 04</span>
+                </div>
+                <section class="data-section">
+                  <div class="section-title-row">
+                    <div><span class="eyebrow">ALL READINGS</span><h3>Recorded floor activity</h3></div>
+                    <label class="date-control">Filter by UTC date<input id="history-date" type="date"></label>
+                  </div>
+                  <div class="table-wrap">
+                    <table><thead><tr><th>Recorded at (UTC)</th><th>Sector</th><th>Station zone</th><th class="numeric">Steps</th><th class="numeric">Generated</th></tr></thead><tbody id="history-table-body"><tr><td colspan="5" class="empty-cell">Loading reading history…</td></tr></tbody></table>
+                  </div>
+                </section>
+              </section>
+
+              <section class="view" id="view-reports" aria-labelledby="reports-heading" hidden>
+        <div class="section-heading"><div><span class="eyebrow">FINANCE & PERFORMANCE</span><h2 id="reports-heading">Reports</h2></div><span class="section-marker">REPORTING / 03</span></div>
+        <div class="content-grid report-grid">
+          <section class="data-section">
+            <div class="section-title-row"><div><span class="eyebrow">ENERGY P&amp;L</span><h3>Operating performance</h3></div><span class="report-code">P&amp;L</span></div>
+            <form id="pnl-form" class="form-stack report-form">
+              <label>Energy export price <span class="label-unit">per kWh</span><input id="pnl-price" type="number" min="0" step="0.01" value="0.18" required></label>
+              <label>Transducer repairs<input id="pnl-repairs" type="number" min="0" step="0.01" value="0" required></label>
+              <label>Inverter maintenance<input id="pnl-inverter" type="number" min="0" step="0.01" value="0" required></label>
+              <button class="button button-dark" type="submit">Generate P&amp;L <span aria-hidden="true">→</span></button>
+            </form>
+            <div class="report-output" id="pnl-output" aria-live="polite"><p class="empty-message">Generate the report to calculate energy revenue and operating costs.</p></div>
+          </section>
+          <section class="data-section">
+            <div class="section-title-row"><div><span class="eyebrow">STATION BUDGET</span><h3>Plan vs. actual</h3></div><span class="report-code">BUDGET</span></div>
+            <form id="budget-form" class="form-stack report-form">
+              <label>Planned energy <span class="label-unit">kWh</span><input id="budget-energy" type="number" min="0" step="any" placeholder="1200" required></label>
+              <label>Planned maintenance <span class="label-unit">currency units</span><input id="budget-maintenance" type="number" min="0" step="0.01" placeholder="8500" required></label>
+              <button class="button button-dark" type="submit">Generate budget <span aria-hidden="true">→</span></button>
+            </form>
+            <div class="report-output" id="budget-output" aria-live="polite"><p class="empty-message">Enter approved station targets to compare planned energy with actual generation.</p></div>
+          </section>
+        </div>
+        <p class="report-caveat">Current report calculations use the supplied price, repair, and maintenance values. Accounting transactions and chart-of-accounts integration are not yet configured.</p>
+      </section>
+
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+      <footer class="page-footer"><span>METROKINETIC <span aria-hidden="true">/</span> SUBWAY FLOOR ENERGY NETWORK</span><span>OPERATIONS CONSOLE <span aria-hidden="true">·</span> V1.0</span></footer>
+    </main>
+  </div>
+</body>
+</html>
